@@ -6,8 +6,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.io.IOException;
+import java.security.cert.CertificateException;
+
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -38,6 +43,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mInput = findViewById(R.id.et_main_input);
         findViewById(R.id.btn_main_parse).setOnClickListener(this);
 
+        // 自定义一个信任所有证书的TrustManager，添加SSLSocketFactory的时候要用到
+        final X509TrustManager trustAllCert =
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return new java.security.cert.X509Certificate[]{};
+                    }
+                };
+        final SSLSocketFactory sslSocketFactory = new SSLSocketFactoryCompat(trustAllCert);
+
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new Interceptor() {
                     @Override
@@ -49,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         return chain.proceed(request);
                     }
                 })
+                .sslSocketFactory(sslSocketFactory, trustAllCert)
                 .build();
 
         mRetrofit = new Retrofit.Builder()
@@ -68,12 +92,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                           .enqueue(new Callback<String>() {
                               @Override
                               public void onResponse(Call<String> call, retrofit2.Response<String> response) {
-                                  Log.i(TAG, "onResponse: " + response.body());
+                                  String body = response.body();
+                                  Log.i(TAG, "onResponse: " + body);
+                                  Toast.makeText(MainActivity.this, "onResponse " + body, Toast.LENGTH_LONG).show();
                               }
 
                               @Override
                               public void onFailure(Call<String> call, Throwable t) {
                                   Log.e(TAG, "onFailure: " + t);
+                                  Toast.makeText(MainActivity.this, "onFailure " + t, Toast.LENGTH_LONG).show();
                               }
                           });
                 break;
