@@ -12,7 +12,7 @@
         android:id="@+id/btn_main_jump"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="第二题"/>
+        android:text="@string/label_jump"/>
 
     <EditText
         android:id="@+id/et_main_input"
@@ -27,7 +27,7 @@
         android:id="@+id/btn_main_parse"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="解析"/>
+        android:text="@string/label_parse"/>
 
     <ImageView
         android:id="@+id/iv_main"

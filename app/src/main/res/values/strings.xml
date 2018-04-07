@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Interview</string>
+    <string name="label_update">更新</string>
+    <string name="label_title">汇率助手</string>
+    <string name="label_tip_illegal_url">非法网址</string>
+    <string name="label_parse">解析</string>
+    <string name="label_jump">第二题</string>
 </resources>

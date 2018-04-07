@@ -42,12 +42,10 @@ public class ApiFactory {
     private Retrofit mRetrofit;
 
     private ApiFactory() {
-
         final X509TrustManager trustAllCert =
                 new X509TrustManager() {
                     @Override
                     public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-
                     }
 
                     @Override
@@ -60,7 +58,6 @@ public class ApiFactory {
                     }
                 };
         final SSLSocketFactory sslSocketFactory = new SSLSocketFactoryCompat(trustAllCert);
-
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new Interceptor() {
                     @Override
@@ -74,6 +71,7 @@ public class ApiFactory {
                 })
                 .sslSocketFactory(sslSocketFactory, trustAllCert)
                 .build();
+
         mRetrofit = new Retrofit.Builder()
                 .baseUrl("https://github.com")
                 .client(client)
@@ -90,7 +88,5 @@ public class ApiFactory {
         @GET
         Call<String> request(@Url String url);
 
-        @GET("https://api.fixer.io/latest")
-        Call<String> get();
     }
 }

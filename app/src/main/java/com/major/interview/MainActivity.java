@@ -1,6 +1,5 @@
 package com.major.interview;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +23,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private EditText mInput;
     private ImageView mImage;
 
-    @SuppressLint("WrongViewCast")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_main_parse:
                 String url = mInput.getText().toString();
                 if (!RegExUtil.isUrl(url)) {
-                    Toast.makeText(MainActivity.this, "非法网址", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.label_tip_illegal_url, Toast.LENGTH_SHORT).show();
                     return;
                 }
 

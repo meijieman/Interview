@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dslv="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".SecondActivity">
 
+    <com.mobeta.android.dslv.DragSortListView
+        android:id="@+id/dslv_second"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:dividerHeight="1px"
+        android:background="@android:color/white"
+        dslv:collapsed_height="1px"
+        dslv:drag_enabled="true"
+        dslv:drag_handle_id="@+id/tv_item"
+        dslv:drag_scroll_start="0.33"
+        dslv:drag_start_mode="onDown"
+        dslv:float_alpha="0.6"
+        dslv:remove_enabled="false"
+        dslv:slide_shuffle_speed="0.3"/>
 </LinearLayout>
