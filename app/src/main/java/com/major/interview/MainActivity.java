@@ -10,11 +10,17 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.hongfans.common.api.exception.ApiException;
+import com.hongfans.common.rx.RxSchedulers;
+import com.hongfans.common.rx.RxSubscriber;
+import com.major.interview.api.ApiFactory;
+import com.major.interview.util.RegExUtil;
 
 import java.util.Arrays;
 
-import retrofit2.Call;
-import retrofit2.Callback;
+import rx.Observable;
+import rx.Subscription;
+import rx.functions.Func1;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -46,25 +52,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(MainActivity.this, R.string.label_tip_illegal_url, Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-                ApiFactory.getInstance().getApiService()
+                Subscription subscribe = ApiFactory.getInstance().getApiService()
                         .request(url)
-                        .enqueue(new Callback<String>() {
+                        .flatMap(new Func1<String, Observable<String>>() {
                             @Override
-                            public void onResponse(Call<String> call, retrofit2.Response<String> response) {
-                                String body = response.body();
-                                Log.i(TAG, "onResponse: " + body);
-                                String[] imgs = RegExUtil.getImgs(body);
-                                Log.i(TAG, "onResponse: imgs " + Arrays.toString(imgs));
+                            public Observable<String> call(String s) {
+                                String[] imgs = RegExUtil.getImgs(s);
+                                Log.i(TAG, "call: imgs " + Arrays.toString(imgs));
                                 if (imgs != null && imgs.length > 0) {
-                                    Glide.with(MainActivity.this).load(imgs[0]).into(mImage);
+                                    return Observable.just(imgs[0]);
                                 }
+                                return Observable.empty();
                             }
-
+                        })
+                        .compose(RxSchedulers.<String>switchThird())
+                        .subscribe(new RxSubscriber<String>() {
                             @Override
-                            public void onFailure(Call<String> call, Throwable t) {
-                                Log.e(TAG, "onFailure: " + t);
-                                Toast.makeText(MainActivity.this, "onFailure " + t, Toast.LENGTH_LONG).show();
+                            public void onNext(String s) {
+                                Glide.with(MainActivity.this).load(s).into(mImage);
+                            }
+                            @Override
+                            public void onError(ApiException e) {
+                                Log.e(TAG, "onError: " + e);
+                                Toast.makeText(MainActivity.this, "onError " + e, Toast.LENGTH_LONG).show();
                             }
                         });
                 break;

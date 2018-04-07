@@ -1,4 +1,4 @@
-package com.major.interview;
+package com.major.interview.api;
 
 /**
  * TODO

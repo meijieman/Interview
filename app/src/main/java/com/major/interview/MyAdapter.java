@@ -20,7 +20,6 @@ public class MyAdapter extends BaseAdapter {
 
     private static final String TAG = "tag_my";
 
-    private EditText mEt;
     private List<Rate> mData;
     private int mPos = -1;
     private int mIndex = -1;
@@ -41,8 +40,7 @@ public class MyAdapter extends BaseAdapter {
             String equal1 = s.toString();
             Log.d(TAG, "onTextChanged: " + rate.getEqual() + ", " + equal1 + ", pos " + mPos);
             if (mListener != null && !rate.getEqual().equals(equal1)) {
-                Log.i(TAG, "onTextChanged: listener");
-                mListener.onTextChanged(mEt, mPos, rate.getCurrency(), equal1);
+                mListener.onTextChanged(mPos, rate.getCurrency(), equal1);
             }
         }
         @Override
@@ -101,7 +99,6 @@ public class MyAdapter extends BaseAdapter {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 Log.i(TAG, "onFocusChange: " + hasFocus);
-                mEt = (EditText) v;
                 if (hasFocus) {
                     equal.addTextChangedListener(mWatcher);
                     mPos = pos;
@@ -112,7 +109,6 @@ public class MyAdapter extends BaseAdapter {
         });
         // 请求焦点
         if (mPos == pos) {
-            Log.i(TAG, "==## getView: requestFocus");
             equal.setFocusable(true);
             equal.setFocusableInTouchMode(true);
             equal.requestFocus();
@@ -123,7 +119,6 @@ public class MyAdapter extends BaseAdapter {
         return view;
     }
 
-
     private TextChangedListener mListener;
 
     public void setTextChangedListener(TextChangedListener listener) {
@@ -131,6 +126,6 @@ public class MyAdapter extends BaseAdapter {
     }
 
     public interface TextChangedListener {
-        void onTextChanged(EditText view, int pos, String currency, String equal);
+        void onTextChanged(int pos, String currency, String equal);
     }
 }

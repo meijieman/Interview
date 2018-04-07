@@ -1,4 +1,4 @@
-package com.major.interview;
+package com.major.interview.util;
 
 import java.util.ArrayList;
 import java.util.List;

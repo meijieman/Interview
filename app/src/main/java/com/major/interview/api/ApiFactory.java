@@ -1,4 +1,4 @@
-package com.major.interview;
+package com.major.interview.api;
 
 import java.io.IOException;
 import java.security.cert.CertificateException;
@@ -10,11 +10,12 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import retrofit2.Call;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Url;
+import rx.Observable;
 
 /**
  * @desc: TODO
@@ -75,6 +76,7 @@ public class ApiFactory {
         mRetrofit = new Retrofit.Builder()
                 .baseUrl("https://github.com")
                 .client(client)
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .build();
     }
@@ -86,7 +88,7 @@ public class ApiFactory {
     public interface ApiService {
 
         @GET
-        Call<String> request(@Url String url);
+        Observable<String> request(@Url String url);
 
     }
 }

@@ -7,10 +7,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.EditText;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.hongfans.common.api.exception.ApiException;
+import com.hongfans.common.rx.RxSchedulers;
+import com.hongfans.common.rx.RxSubscriber;
+import com.hongfans.common.rx.rxtask.RxTask;
+import com.major.interview.api.ApiFactory;
 import com.mobeta.android.dslv.DragSortListView;
 
 import org.json.JSONException;
@@ -24,9 +28,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import rx.Observable;
+import rx.Subscription;
+import rx.functions.Func1;
 
 public class SecondActivity extends AppCompatActivity {
 
@@ -44,9 +48,11 @@ public class SecondActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_second);
+
         setTitle(getString(R.string.label_title));
         mListView = findViewById(R.id.dslv_second);
         mSp = getSharedPreferences(SP_TMP, MODE_PRIVATE);
+
         init();
         initListener();
     }
@@ -56,7 +62,7 @@ public class SecondActivity extends AppCompatActivity {
         String rates = mSp.getString(SP_RATES, "");
         if (!rates.isEmpty()) {
             mRates = new Gson().fromJson(rates, new TypeToken<Map<String, String>>() {}.getType());
-            Log.i(TAG, "onCreate: rates " + mRates);
+            Log.i(TAG, "onCreate: mRates " + mRates);
         }
         List<Rate> datas = null;
         String json = mSp.getString(SP_LIST, "");
@@ -90,10 +96,19 @@ public class SecondActivity extends AppCompatActivity {
         });
         mAdapter.setTextChangedListener(new MyAdapter.TextChangedListener() {
             @Override
-            public void onTextChanged(EditText et, int pos, String currency, String equal) {
-                Log.i(TAG, "onTextChanged: " + pos + ", " + equal);
-                List<Rate> datas = calcRate(currency, equal);
-                mAdapter.setDatas(datas);
+            public void onTextChanged(int pos, final String currency, final String equal) {
+                Log.i(TAG, "onTextChanged: pos " + pos + ", currency " + currency + ", equal " + equal);
+                RxTask.doTask(new RxTask.Task<List<Rate>>() {
+                    @Override
+                    public List<Rate> onIOThread() {
+                        List<Rate> datas = calcRate(currency, equal);
+                        return datas;
+                    }
+                    @Override
+                    public void onUIThread(List<Rate> rates) {
+                        mAdapter.setDatas(rates);
+                    }
+                });
             }
         });
     }
@@ -101,7 +116,6 @@ public class SecondActivity extends AppCompatActivity {
     // 计算汇率
     private List<Rate> calcRate(String currency, String equal) {
         List<Rate> datas = new ArrayList<>(mAdapter.getDatas());
-
         if (equal.isEmpty()) {
             equal = "0";
         }
@@ -138,25 +152,30 @@ public class SecondActivity extends AppCompatActivity {
     }
 
     private void getRates() {
-        Call<String> stringCall = ApiFactory.getInstance().getApiService()
-                .request("https://api.fixer.io/latest?base=USD");
-        stringCall.enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                String body = response.body();
-                Log.i(TAG, "onResponse: " + body);
-                Map<String, String> map = parseJson(body);
-                // 保存汇率
-                mSp.edit().putString(SP_RATES, new Gson().toJson(map)).apply();
-                List<Rate> list = transform(map);
-                mAdapter.setDatas(list);
-            }
-
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                Log.e(TAG, "onFailure: " + t);
-            }
-        });
+        Subscription subscribe = ApiFactory.getInstance().getApiService()
+                .request("https://api.fixer.io/latest?base=USD")
+                .flatMap(new Func1<String, Observable<List<Rate>>>() {
+                    @Override
+                    public Observable<List<Rate>> call(String s) {
+                        Log.i(TAG, "call: " + s);
+                        Map<String, String> map = parseJson(s);
+                        // 保存汇率
+                        mSp.edit().putString(SP_RATES, new Gson().toJson(map)).apply();
+                        List<Rate> list = transform(map);
+                        return Observable.just(list);
+                    }
+                })
+                .compose(RxSchedulers.<List<Rate>>switchThird())
+                .subscribe(new RxSubscriber<List<Rate>>() {
+                    @Override
+                    public void onNext(List<Rate> rates) {
+                        mAdapter.setDatas(rates);
+                    }
+                    @Override
+                    public void onError(ApiException e) {
+                        Log.e(TAG, "onError: " + e);
+                    }
+                });
     }
 
     @NonNull
